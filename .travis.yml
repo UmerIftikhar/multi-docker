@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t umiftikh/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run umiftikh/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t umiftikh/multi-client ./client
+  - docker build -t umiftikh/multi-nginx ./nginx
+  - docker build -t umiftikh/multi-server ./server
+  - docker build -t umiftikh/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push umiftikh/multi-client
+  - docker push umiftikh/multi-nginx
+  - docker push umiftikh/multi-server
+  - docker push umiftikh/multi-worker
